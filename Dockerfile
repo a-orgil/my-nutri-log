@@ -26,19 +26,19 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
 # =============================================================================
-# Stage 3: Runner
+# Stage 3: Runner (Debian slim for Prisma OpenSSL compatibility)
 # =============================================================================
-FROM node:20-alpine AS runner
+FROM node:20-slim AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# OpenSSL 1.1 互換ライブラリをインストール（Prisma用）
-RUN apk add --no-cache openssl1.1-compat
+# OpenSSL is included in node:20-slim (Debian-based)
+# Prisma 5.x supports OpenSSL 3.x
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+RUN groupadd --system --gid 1001 nodejs
+RUN useradd --system --uid 1001 nextjs
 
 # Copy necessary files
 COPY --from=builder /app/public ./public
