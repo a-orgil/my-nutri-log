@@ -186,7 +186,8 @@ type FormInput = z.infer<typeof schema>;
 #### 認証チェック（NextAuth.js v5）
 
 ```typescript
-import { auth } from "@/auth";
+// API Routes での認証チェック
+import { auth } from "@/../auth"; // ルートのauth.tsを参照
 
 export async function GET() {
   const session = await auth();
@@ -199,6 +200,16 @@ export async function GET() {
   const userId = parseInt(session.user.id);
   // ...
 }
+```
+
+#### クライアントコンポーネントでの認証
+
+```typescript
+// "use client" コンポーネントでの認証操作
+import { signOut } from "next-auth/react";
+
+// ログアウト
+await signOut({ callbackUrl: "/login" });
 ```
 
 #### Prisma Decimal 型の処理
@@ -322,10 +333,26 @@ DATABASE_URL="postgresql://postgres:postgres@localhost:5432/mynutrilog?schema=pu
   - GET/PUT/DELETE /api/v1/foods/:id
   - /foods（一覧）、/foods/new（新規）、/foods/[id]/edit（編集）
   - コンポーネント: FoodCard, FoodForm, FoodList, FoodSearchInput, PFCBalanceChart
+- [x] 食事記録機能実装（API・画面） - Issue #3
+  - GET/POST /api/v1/meals
+  - GET/PUT/DELETE /api/v1/meals/:id
+  - GET /api/v1/summary/daily
+  - /meals（一覧）、/meals/new（新規）、/meals/[id]/edit（編集）
+  - コンポーネント: MealForm, MealSection, MealItemCard, FoodSelector, NutritionSummary
+- [x] ホーム画面・集計機能・設定画面実装 - Issue #4
+  - GET /api/v1/summary/monthly
+  - GET/PUT /api/v1/users/me
+  - GET/PUT /api/v1/users/me/targets
+  - PUT /api/v1/users/me/password
+  - /（ホーム・カレンダー）、/settings（設定）
+  - コンポーネント: CalendarGrid, DaySummaryCard, TargetForm
 
-### 次のステップ
+### 主要機能実装完了
 
-- [ ] 食事記録機能実装（API・画面） - Issue #3（予定）
-- [ ] 集計機能実装（日次・月次サマリー）
-- [ ] ホーム画面（カレンダー表示）
-- [ ] 設定画面（目標値設定）
+アプリの主要機能がすべて実装されました：
+
+- 認証（登録・ログイン・ログアウト・パスワード変更）
+- 食品マスタ管理（CRUD）
+- 食事記録（CRUD・栄養計算）
+- ホーム画面（カレンダー・日次サマリー・月平均）
+- 設定画面（目標値設定・アカウント管理）
