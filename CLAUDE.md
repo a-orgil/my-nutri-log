@@ -196,3 +196,24 @@ DATABASE_URL="postgresql://postgres:postgres@localhost:5432/mynutrilog?schema=pu
 - ローカル開発にはDocker Desktopが必要
 - `.env.local`ファイルはGit管理外
 - 本番DBはSupabase（無料枠500MB）
+- Windowsでは`make`コマンド使用にChocolatey等でのインストールが必要
+
+## 開発状況
+
+### 完了済み
+
+- [x] プロジェクト初期セットアップ
+- [x] 設計ドキュメント作成（DB、API、画面、テスト仕様）
+- [x] Prismaスキーマ定義
+- [x] ESLint/Prettier/Husky設定
+- [x] CI/CDパイプライン構築
+- [x] Supabase本番DB接続設定
+- [x] GCP環境設定（Workload Identity Federation）
+- [x] GitHub Secrets設定
+
+### 次のステップ
+
+- [ ] 認証機能実装（NextAuth.js）
+- [ ] API実装（Route Handlers）
+- [ ] 画面実装（shadcn/ui）
+- [ ] テスト作成
