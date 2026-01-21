@@ -1,6 +1,8 @@
 import type { NextAuthConfig } from "next-auth";
 
 export const authConfig = {
+  // 本番環境でプロキシ経由のホストを信頼する
+  trustHost: true,
   pages: {
     signIn: "/login",
   },
