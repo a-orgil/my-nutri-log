@@ -1,0 +1,105 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ユーザーテーブル
+model User {
+  id                   Int      @id @default(autoincrement())
+  email                String   @unique @db.VarChar(255)
+  passwordHash         String   @map("password_hash") @db.VarChar(255)
+  name                 String   @db.VarChar(100)
+  dailyCalorieTarget   Int      @default(2000) @map("daily_calorie_target")
+  dailyProteinTarget   Int      @default(60) @map("daily_protein_target")
+  dailyFatTarget       Int      @default(55) @map("daily_fat_target")
+  dailyCarbTarget      Int      @default(300) @map("daily_carb_target")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  // リレーション
+  foodMasters  FoodMaster[]
+  mealRecords  MealRecord[]
+
+  @@map("users")
+}
+
+// 食品マスタテーブル
+model FoodMaster {
+  id           Int      @id @default(autoincrement())
+  userId       Int?     @map("user_id")
+  name         String   @db.VarChar(200)
+  calories     Decimal  @db.Decimal(8, 2)
+  protein      Decimal  @db.Decimal(8, 2)
+  fat          Decimal  @db.Decimal(8, 2)
+  carbohydrate Decimal  @db.Decimal(8, 2)
+  servingSize  Decimal  @default(100) @map("serving_size") @db.Decimal(8, 2)
+  servingUnit  String   @default("g") @map("serving_unit") @db.VarChar(20)
+  isDefault    Boolean  @default(false) @map("is_default")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // リレーション
+  user      User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mealItems MealItem[]
+
+  @@index([userId])
+  @@index([name])
+  @@map("food_masters")
+}
+
+// 食事記録テーブル
+model MealRecord {
+  id         Int      @id @default(autoincrement())
+  userId     Int      @map("user_id")
+  recordDate DateTime @map("record_date") @db.Date
+  mealType   MealType @map("meal_type")
+  memo       String?  @db.Text
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  // リレーション
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mealItems MealItem[]
+
+  @@index([userId, recordDate])
+  @@index([recordDate])
+  @@map("meal_records")
+}
+
+// 食事明細テーブル
+model MealItem {
+  id           Int      @id @default(autoincrement())
+  mealRecordId Int      @map("meal_record_id")
+  foodMasterId Int      @map("food_master_id")
+  quantity     Decimal  @default(1) @db.Decimal(8, 2)
+  calories     Decimal  @db.Decimal(8, 2)
+  protein      Decimal  @db.Decimal(8, 2)
+  fat          Decimal  @db.Decimal(8, 2)
+  carbohydrate Decimal  @db.Decimal(8, 2)
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  // リレーション
+  mealRecord MealRecord @relation(fields: [mealRecordId], references: [id], onDelete: Cascade)
+  foodMaster FoodMaster @relation(fields: [foodMasterId], references: [id], onDelete: Restrict)
+
+  @@index([mealRecordId])
+  @@index([foodMasterId])
+  @@map("meal_items")
+}
+
+// 食事タイプEnum
+enum MealType {
+  breakfast
+  lunch
+  dinner
+  snack
+
+  @@map("meal_type")
+}

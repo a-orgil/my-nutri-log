@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(claude mcp add:*)",
+      "Bash(npm install:*)",
+      "Bash(npx prisma init:*)",
+      "Bash(npx shadcn@latest init:*)",
+      "Bash(npx shadcn@latest add:*)",
+      "Bash(npx husky:*)",
+      "Bash(npm run test:run:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: 初期プロジェクトセットアップ\n\n- Next.js 16 \\(App Router, TypeScript, Tailwind CSS v4\\)\n- Prisma v5 + PostgreSQL スキーマ定義\n- shadcn/ui コンポーネント\n- ESLint v9 + Prettier 設定\n- Vitest + Testing Library 設定\n- Husky + lint-staged 設定\n- 設計ドキュメント \\(DB設計、API設計、画面設計、テスト仕様\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(npm run lint:*)"
+    ]
+  }
+}

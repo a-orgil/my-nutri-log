@@ -1,0 +1,22 @@
+# Dependencies
+node_modules
+
+# Build outputs
+.next
+out
+build
+dist
+
+# Cache
+.cache
+
+# Coverage
+coverage
+
+# Generated files
+*.min.js
+*.min.css
+package-lock.json
+
+# Prisma
+prisma/migrations
