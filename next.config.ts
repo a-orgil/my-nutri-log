@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Docker用のスタンドアロン出力
+  output: "standalone",
 };
 
 export default nextConfig;

@@ -24,67 +24,119 @@
 | テスト         | Vitest + Testing Library    |
 | Linter         | ESLint v9 + Prettier        |
 | Git Hooks      | Husky + lint-staged         |
+| CI/CD          | GitHub Actions              |
 | デプロイ       | Google Cloud Run            |
+
+## 環境構成
+
+| 環境     | DB                  | ホスティング     |
+| -------- | ------------------- | ---------------- |
+| ローカル | Docker PostgreSQL   | localhost:3000   |
+| 本番     | Supabase PostgreSQL | Google Cloud Run |
 
 ## プロジェクト構成
 
 ```
 my-nutri-log/
-├── .husky/                 # Git hooks
-├── docs/                   # 設計ドキュメント
-│   ├── database-design.md  # ER図・テーブル定義
-│   ├── screen-design.md    # 画面定義書
-│   ├── api-design.md       # API設計書
-│   └── test-specification.md # テスト仕様書
+├── .github/
+│   └── workflows/
+│       ├── ci.yml              # CI（Lint, Test, Build）
+│       └── cd.yml              # CD（Cloud Runデプロイ）
+├── .husky/                     # Git hooks
+├── docs/                       # 設計ドキュメント
+│   ├── database-design.md      # ER図・テーブル定義
+│   ├── screen-design.md        # 画面定義書
+│   ├── api-design.md           # API設計書
+│   ├── test-specification.md   # テスト仕様書
+│   └── deployment.md           # デプロイ手順書
 ├── prisma/
-│   └── schema.prisma       # DBスキーマ定義
+│   └── schema.prisma           # DBスキーマ定義
 ├── src/
-│   ├── app/                # Next.js App Router (ページ・レイアウト)
-│   ├── components/
-│   │   └── ui/             # shadcn/uiコンポーネント
+│   ├── app/                    # Next.js App Router
+│   ├── components/ui/          # shadcn/uiコンポーネント
 │   ├── lib/
-│   │   ├── prisma.ts       # Prismaクライアント
-│   │   └── utils.ts        # ユーティリティ関数
-│   └── test/               # テストファイル
-├── public/                 # 静的ファイル
-├── .env                    # 環境変数（Git管理外）
-├── eslint.config.mjs       # ESLint設定
-├── .prettierrc             # Prettier設定
-├── vitest.config.mts       # Vitest設定
-└── tsconfig.json           # TypeScript設定
+│   │   ├── prisma.ts           # Prismaクライアント
+│   │   └── utils.ts            # ユーティリティ関数
+│   └── test/                   # テストファイル
+├── public/                     # 静的ファイル
+├── Dockerfile                  # Docker設定
+├── docker-compose.yml          # ローカルDB設定
+├── Makefile                    # デプロイ・開発コマンド
+├── .env.example                # 環境変数サンプル
+└── .env.local                  # 環境変数（Git管理外）
 ```
 
-## 開発コマンド
+## Makeコマンド
 
 ```bash
-# 開発
-npm run dev              # 開発サーバー起動 (http://localhost:3000)
-npm run build            # プロダクションビルド
-npm run start            # プロダクションサーバー起動
+# ヘルプ表示
+make help
 
-# コード品質
-npm run lint             # ESLint実行
-npm run lint:fix         # ESLint自動修正
-npm run format           # Prettier整形
-npm run format:check     # Prettier整形チェック
+# ローカル開発
+make dev              # 開発サーバー起動
+make build            # プロダクションビルド
+make lint             # ESLint実行
+make test             # テスト実行
 
-# テスト
-npm run test             # Vitest（watchモード）
-npm run test:run         # Vitest（単発実行）
-npm run test:coverage    # カバレッジ取得
+# ローカルDB
+make db-up            # PostgreSQL起動
+make db-down          # PostgreSQL停止
+make db-reset         # DBリセット
 
-# データベース
-npm run prisma:generate  # Prismaクライアント生成
-npm run prisma:push      # スキーマをDBに反映
-npm run prisma:migrate   # マイグレーション作成・実行
-npm run prisma:studio    # Prisma Studio起動
+# Prisma
+make prisma-generate  # クライアント生成
+make prisma-push      # スキーマ反映
+make prisma-migrate   # マイグレーション
+make prisma-studio    # Prisma Studio起動
+
+# デプロイ
+make deploy           # フルデプロイ（ビルド&デプロイ）
+make deploy-build     # Cloud Buildでビルド
+make deploy-run       # Cloud Runにデプロイ
+make deploy-status    # デプロイ状態確認
+make deploy-logs      # ログ表示
 ```
+
+## 開発フロー
+
+### 初回セットアップ
+
+```bash
+make setup            # npm install & .env.example → .env.local
+make db-up            # ローカルDB起動
+make prisma-push      # スキーマ反映
+make dev              # 開発サーバー起動
+```
+
+### 日常開発
+
+```bash
+make db-up            # DB起動（未起動の場合）
+make dev              # 開発サーバー起動
+# コード編集...
+make test             # テスト実行
+git add . && git commit  # Huskyが自動でlint/format
+git push origin main  # 自動デプロイ
+```
+
+## CI/CD パイプライン
+
+### CI（Pull Request時 & Push時）
+
+1. **Lint & Type Check** - ESLint, TypeScript
+2. **Test** - Vitest
+3. **Build** - Next.js ビルド
+
+### CD（main Push時）
+
+1. Docker イメージビルド
+2. Artifact Registry にプッシュ
+3. Cloud Run にデプロイ
 
 ## 開発ルール
 
 ### コーディング規約
 
-- **インポート順序**: builtin → external → internal → parent/sibling → index → type
 - **未使用変数**: `_` プレフィックスで許可（例: `_unused`）
 - **console.log**: 禁止（`console.warn`/`console.error`のみ許可）
 - **型定義**: `any` は警告、明示的な型定義を推奨
@@ -98,7 +150,7 @@ Huskyにより、コミット時に以下が自動実行される:
 
 ### ブランチ戦略
 
-- `main`: 本番環境
+- `main`: 本番環境（自動デプロイ）
 - `develop`: 開発統合ブランチ
 - `feature/*`: 機能開発
 - `fix/*`: バグ修正
@@ -120,23 +172,27 @@ type:
 
 ## 環境変数
 
-`.env`ファイルに以下を設定:
+`.env.local`ファイルに以下を設定:
 
 ```env
-DATABASE_URL="postgresql://user:password@localhost:5432/mynutrilog?schema=public"
+# ローカル開発用
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/mynutrilog?schema=public"
+
+# 本番環境用（Supabase）
+# DATABASE_URL="postgresql://postgres:xxx@db.xxx.supabase.co:5432/postgres"
 ```
 
 ## 設計ドキュメント
-
-詳細な設計は以下を参照:
 
 @docs/database-design.md
 @docs/api-design.md
 @docs/screen-design.md
 @docs/test-specification.md
+@docs/deployment.md
 
 ## 注意事項
 
-- Node.js v20.19以上を推奨（現在v20.11.1で一部警告あり）
-- PostgreSQLが必要（ローカル開発時）
-- `.env`ファイルはGit管理外
+- Node.js v20.19以上を推奨
+- ローカル開発にはDocker Desktopが必要
+- `.env.local`ファイルはGit管理外
+- 本番DBはSupabase（無料枠500MB）
