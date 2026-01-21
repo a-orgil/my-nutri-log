@@ -76,6 +76,8 @@ jobs:
             NODE_ENV=production
           secrets: |
             DATABASE_URL=DATABASE_URL:latest
+            AUTH_SECRET=AUTH_SECRET:latest
+            AUTH_TRUST_HOST=AUTH_TRUST_HOST:latest
 
       # デプロイURL出力
       - name: Show deployment URL
