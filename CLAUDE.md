@@ -141,6 +141,112 @@ git push origin main  # 自動デプロイ
 - **console.log**: 禁止（`console.warn`/`console.error`のみ許可）
 - **型定義**: `any` は警告、明示的な型定義を推奨
 
+### 実装パターン
+
+#### API レスポンス形式
+
+```typescript
+// 成功時
+{ success: true, data: { ... } }
+
+// エラー時
+{ success: false, error: { code: "ERROR_CODE", message: "エラーメッセージ" } }
+
+// ページネーション付き
+{
+  success: true,
+  data: {
+    items: [...],
+    pagination: { current_page, total_pages, total_count, limit }
+  }
+}
+```
+
+- レスポンスのキーは **snake_case** を使用
+- TypeScript内部では **camelCase** を使用
+
+#### Zod バリデーション（v4）
+
+```typescript
+// 基本形
+const schema = z.object({
+  name: z.string().min(1, "必須項目です").max(200, "200文字以内"),
+  value: z.number({ error: "数値を入力してください" }).min(0, "0以上"),
+});
+
+// enum
+const unitSchema = z.enum(["g", "ml", "個"], {
+  error: "有効な単位を選択してください",
+});
+
+// フォーム用の型生成
+type FormInput = z.infer<typeof schema>;
+```
+
+#### 認証チェック（NextAuth.js v5）
+
+```typescript
+import { auth } from "@/auth";
+
+export async function GET() {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return Response.json(
+      { success: false, error: { code: "UNAUTHORIZED", message: "..." } },
+      { status: 401 }
+    );
+  }
+  const userId = parseInt(session.user.id);
+  // ...
+}
+```
+
+#### Prisma Decimal 型の処理
+
+```typescript
+// Decimal → number 変換（APIレスポンス用）
+function formatForResponse(record: { calories: Decimal; ... }) {
+  return {
+    calories: record.calories.toNumber(),
+    // ...
+  };
+}
+```
+
+#### コンポーネント構成
+
+```
+src/components/
+├── ui/          # shadcn/ui ベースコンポーネント（汎用）
+└── {feature}/   # 機能別コンポーネント
+    ├── {feature}-form.tsx      # フォーム
+    ├── {feature}-card.tsx      # カード表示
+    ├── {feature}-list.tsx      # 一覧表示
+    └── {feature}-search.tsx    # 検索入力
+```
+
+#### ページ構成（App Router）
+
+```
+src/app/
+├── (auth)/           # 未認証ユーザー向け（ログイン・登録）
+├── (main)/           # 認証済みユーザー向け
+│   ├── layout.tsx    # 共通レイアウト（ヘッダー・フッター）
+│   └── {feature}/
+│       ├── page.tsx           # 一覧
+│       ├── new/page.tsx       # 新規作成
+│       └── [id]/edit/page.tsx # 編集
+└── api/v1/           # API Routes
+```
+
+#### テストファイル配置
+
+```
+src/test/
+├── lib/          # ユーティリティ・バリデーションのテスト
+└── api/          # APIエンドポイントのテスト（今後追加）
+```
+
 ### コミット前チェック
 
 Huskyにより、コミット時に以下が自動実行される:
@@ -210,10 +316,16 @@ DATABASE_URL="postgresql://postgres:postgres@localhost:5432/mynutrilog?schema=pu
 - [x] Supabase本番DB接続設定
 - [x] GCP環境設定（Workload Identity Federation）
 - [x] GitHub Secrets設定
+- [x] 認証機能実装（NextAuth.js v5） - Issue #1
+- [x] 食品マスタ機能実装（API・画面） - Issue #2
+  - GET/POST /api/v1/foods
+  - GET/PUT/DELETE /api/v1/foods/:id
+  - /foods（一覧）、/foods/new（新規）、/foods/[id]/edit（編集）
+  - コンポーネント: FoodCard, FoodForm, FoodList, FoodSearchInput, PFCBalanceChart
 
 ### 次のステップ
 
-- [ ] 認証機能実装（NextAuth.js）
-- [ ] API実装（Route Handlers）
-- [ ] 画面実装（shadcn/ui）
-- [ ] テスト作成
+- [ ] 食事記録機能実装（API・画面） - Issue #3（予定）
+- [ ] 集計機能実装（日次・月次サマリー）
+- [ ] ホーム画面（カレンダー表示）
+- [ ] 設定画面（目標値設定）

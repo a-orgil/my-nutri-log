@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: 認証機能の実装（NextAuth.js v5）\n\n- NextAuth.js v5とbcryptjsのインストール\n- 認証ユーティリティ（hashPassword, verifyPassword, バリデーション）\n- NextAuth.js設定（Credentials Provider, JWT戦略）\n- ユーザー登録API（POST /api/v1/auth/register）\n- 認証ミドルウェア（保護ルートのリダイレクト）\n- ログイン画面（/login）\n- 新規登録画面（/register）\n- 認証関連のテスト（26テスト）\n\nCloses #1\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
+    ]
+  }
+}
