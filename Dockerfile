@@ -34,6 +34,9 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# OpenSSL 1.1 互換ライブラリをインストール（Prisma用）
+RUN apk add --no-cache openssl1.1-compat
+
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
