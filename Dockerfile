@@ -1,9 +1,11 @@
 # =============================================================================
 # Stage 1: Dependencies (for building)
 # =============================================================================
-FROM node:20-alpine AS deps
-RUN apk add --no-cache libc6-compat
+FROM node:20-slim AS deps
 WORKDIR /app
+
+# Install OpenSSL for Prisma engine detection
+RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 
 # Install ALL dependencies for building (skip husky with --ignore-scripts)
 COPY package.json package-lock.json ./
@@ -12,13 +14,16 @@ RUN npm ci --ignore-scripts
 # =============================================================================
 # Stage 2: Builder
 # =============================================================================
-FROM node:20-alpine AS builder
+FROM node:20-slim AS builder
 WORKDIR /app
+
+# Install OpenSSL for Prisma engine detection
+RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Generate Prisma client
+# Generate Prisma client (will generate for debian-openssl-3.0.x)
 RUN npx prisma generate
 
 # Build application
@@ -26,7 +31,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
 # =============================================================================
-# Stage 3: Runner (Debian slim for Prisma OpenSSL compatibility)
+# Stage 3: Runner
 # =============================================================================
 FROM node:20-slim AS runner
 WORKDIR /app
@@ -34,8 +39,8 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# OpenSSL is included in node:20-slim (Debian-based)
-# Prisma 5.x supports OpenSSL 3.x
+# Install OpenSSL for Prisma runtime
+RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 
 RUN groupadd --system --gid 1001 nodejs
 RUN useradd --system --uid 1001 nextjs
