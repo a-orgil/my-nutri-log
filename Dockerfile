@@ -1,13 +1,13 @@
 # =============================================================================
-# Stage 1: Dependencies
+# Stage 1: Dependencies (for building)
 # =============================================================================
 FROM node:20-alpine AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Install dependencies
+# Install ALL dependencies for building (skip husky with --ignore-scripts)
 COPY package.json package-lock.json ./
-RUN npm ci --only=production
+RUN npm ci --ignore-scripts
 
 # =============================================================================
 # Stage 2: Builder
