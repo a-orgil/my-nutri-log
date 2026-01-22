@@ -8,6 +8,7 @@ import {
   calculateNutrition,
   MealType,
 } from "@/lib/meals";
+import { getDateRange, parseToUTCDate } from "@/lib/utils";
 
 /**
  * GET /api/v1/meals
@@ -59,20 +60,25 @@ export async function GET(request: NextRequest) {
     // 検索条件構築
     const whereCondition: {
       userId: number;
-      recordDate?: Date | { gte?: Date; lte?: Date };
+      recordDate?: { gte?: Date; lt?: Date };
       mealType?: MealType;
     } = { userId };
 
-    // 日付条件
+    // 日付条件（@db.Dateフィールドとの比較のため範囲検索を使用）
     if (date) {
-      whereCondition.recordDate = new Date(date);
+      const range = getDateRange(date);
+      whereCondition.recordDate = {
+        gte: range.start,
+        lt: range.end,
+      };
     } else if (startDate || endDate) {
       whereCondition.recordDate = {};
       if (startDate) {
-        whereCondition.recordDate.gte = new Date(startDate);
+        whereCondition.recordDate.gte = parseToUTCDate(startDate);
       }
       if (endDate) {
-        whereCondition.recordDate.lte = new Date(endDate);
+        const endRange = getDateRange(endDate);
+        whereCondition.recordDate.lt = endRange.end;
       }
     }
 
@@ -218,7 +224,7 @@ export async function POST(request: NextRequest) {
     const meal = await prisma.mealRecord.create({
       data: {
         userId,
-        recordDate: new Date(recordDate),
+        recordDate: parseToUTCDate(recordDate),
         mealType: mealType as MealType,
         memo: memo || null,
         mealItems: {

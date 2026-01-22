@@ -6,6 +6,7 @@ import {
   calculateMealTotal,
   Nutrition,
 } from "@/lib/meals";
+import { getMonthRangeUTC } from "@/lib/utils";
 
 /**
  * GET /api/v1/summary/monthly
@@ -81,18 +82,17 @@ export async function GET(request: NextRequest) {
       carbohydrate: user.dailyCarbTarget || 300,
     };
 
-    // 月の開始日と終了日を計算
-    const startDate = new Date(year, month - 1, 1);
-    const endDate = new Date(year, month, 0); // 月末日
-    const daysInMonth = endDate.getDate();
+    // 月の開始日と終了日を計算（UTCで統一）
+    const { start: startDate, end: endDate } = getMonthRangeUTC(year, month);
+    const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
 
-    // 該当月の食事記録を取得
+    // 該当月の食事記録を取得（@db.Dateフィールドとの比較のため範囲検索を使用）
     const meals = await prisma.mealRecord.findMany({
       where: {
         userId,
         recordDate: {
           gte: startDate,
-          lte: endDate,
+          lt: endDate,
         },
       },
       include: {
@@ -201,12 +201,12 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * 日付をYYYY-MM-DD形式に変換
+ * 日付をYYYY-MM-DD形式に変換（UTC基準）
  */
 function formatDateToYYYYMMDD(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(date.getUTCDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 }
 

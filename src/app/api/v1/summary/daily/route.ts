@@ -10,6 +10,7 @@ import {
   MealType,
   Nutrition,
 } from "@/lib/meals";
+import { getDateRange } from "@/lib/utils";
 
 /**
  * GET /api/v1/summary/daily
@@ -84,11 +85,15 @@ export async function GET(request: NextRequest) {
       carbohydrate: user.dailyCarbTarget || 300,
     };
 
-    // 該当日の食事記録を取得
+    // 該当日の食事記録を取得（@db.Dateフィールドとの比較のため範囲検索を使用）
+    const range = getDateRange(date);
     const meals = await prisma.mealRecord.findMany({
       where: {
         userId,
-        recordDate: new Date(date),
+        recordDate: {
+          gte: range.start,
+          lt: range.end,
+        },
       },
       include: {
         mealItems: true,
